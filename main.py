@@ -12,7 +12,7 @@ from get_yt_video import get_yt_search
 
 load_dotenv()
 GROQ_MODEL = os.getenv('GROQ_MODEL')
-DEVICE = os.getenv('DEVICE','cuda')
+# DEVICE = os.getenv('DEVICE','cuda')
 
 working_directory = os.path.dirname(os.path.abspath(__file__))
 parent_directory = working_directory #Here working_directory is same as parent_directory
@@ -26,7 +26,7 @@ def get_vector_db_path(chapter,subject):
 
 def setup_chain(selected_chapter,selected_subject):
     get_db_path = get_vector_db_path(selected_chapter,selected_subject)
-    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2",model_kwargs = {"device":"cpu"})
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
     vector_store = Chroma(embedding_function = embeddings,persist_directory = get_db_path)
     llm = ChatGroq(model = GROQ_MODEL,temperature = 0)
     memory = ConversationBufferMemory(output_key = "answer",memory_key = "chat_history",return_messages = True)
@@ -61,6 +61,8 @@ if selected_subject:
     if selected_chapter:
         if st.session_state.get('selected_chapter') != selected_chapter:
             st.session_state.chat_chain = setup_chain(selected_chapter,selected_subject)  # it is used to create the coplete chain
+            st.session_state.chat_history = []
+            st.session_state.video_history = []
         st.session_state.selected_chapter = selected_chapter
 
 # Display Previous messages
@@ -79,7 +81,7 @@ for idx,message in enumerate(st.session_state.chat_history):
 user_input = st.chat_input("Ask AI")
 if user_input:
     st.session_state.chat_history.append({"role":"user","content":user_input})
-    st.session_state.video_history = []
+    # st.session_state.video_history = []
 
     with st.chat_message("user"):
         st.markdown(user_input)
@@ -101,4 +103,5 @@ if user_input:
 
         st.session_state.chat_history.append({"role":"assistant","content":response['answer']})
         st.session_state.video_history.append(video_reference)
+
 
